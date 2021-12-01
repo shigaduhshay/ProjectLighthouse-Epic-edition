@@ -100,7 +100,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                 {
                     AuthTicket = "MM_AUTH=" + token.UserToken,
                     LbpEnvVer = ServerStatics.ServerName,
-                }.Serialize()
+                }
             );
         }
     }

@@ -5,16 +5,15 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Xml;
 using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Profiles;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBPUnion.ProjectLighthouse.Controllers
 {
-    [ApiController]
     [Route("LITTLEBIGPLANETPS3_XML/")]
     [Produces("text/xml")]
     public class UserController : ControllerBase
@@ -51,10 +50,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
             if (token == null) return this.StatusCode(403, "");
 
             List<string?> serializedUsers = new();
-            foreach (string userId in u)
-            {
-                serializedUsers.Add(await this.GetSerializedUser(userId, token.GameVersion));
-            }
+            foreach (string userId in u) serializedUsers.Add(await this.GetSerializedUser(userId, token.GameVersion));
 
             string serialized = serializedUsers.Aggregate(string.Empty, (current, user) => user == null ? current : current + user);
 
@@ -64,114 +60,51 @@ namespace LBPUnion.ProjectLighthouse.Controllers
         [HttpGet("user/{username}/playlists")]
         public IActionResult GetUserPlaylists(string username) => this.Ok();
 
+        // example request for changing profile card location:
+        // <updateUser>
+        //     <location>
+        //         <x>1234</x>
+        //         <y>1234</y>
+        //     </location>
+        // </updateUser>
+        //
+        // example request for changing biography:
+        // <updateUser>
+        //     <biography>biography stuff</biography>
+        // </updateUser>
         [HttpPost("updateUser")]
-        public async Task<IActionResult> UpdateUser()
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUser? updateUser)
         {
+            #if DEBUG
+            IEnumerable<ModelError> errors = ModelState.Values.SelectMany(v => v.Errors);
+            Console.WriteLine(JsonSerializer.Serialize(errors));
+            #endif
+
             User? user = await this.database.UserFromGameRequest(this.Request);
             if (user == null) return this.StatusCode(403, "");
 
-            XmlReaderSettings settings = new()
+            if (updateUser == null) return this.BadRequest();
+
+            if (updateUser.PlanetHash != null) user.PlanetHash = updateUser.PlanetHash;
+            if (updateUser.Biography != null) user.Biography = updateUser.Biography;
+            if (updateUser.IconHash != null) user.IconHash = updateUser.IconHash;
+            if (updateUser.YayHash != null) user.YayHash = updateUser.YayHash;
+            if (updateUser.BooHash != null) user.BooHash = updateUser.BooHash;
+            if (updateUser.MehHash != null) user.MehHash = updateUser.MehHash;
+
+            if (updateUser.Location != null)
             {
-                Async = true, // this is apparently not default
-            };
-
-            bool locationChanged = false;
-
-            // this is an absolute mess, but necessary because LBP only sends what changed
-            //
-            // example for changing profile card location:
-            // <updateUser>
-            //     <location>
-            //         <x>1234</x>
-            //         <y>1234</y>
-            //     </location>
-            // </updateUser>
-            //
-            // example for changing biography:
-            // <updateUser>
-            //     <biography>biography stuff</biography>
-            // </updateUser>
-            //
-            // if you find a way to make it not stupid feel free to replace this
-            using (XmlReader reader = XmlReader.Create(this.Request.Body, settings))
-            {
-                List<string> path = new(); // you can think of this as a file path in the XML, like <updateUser> -> <location> -> <x>
-                while (await reader.ReadAsync()) // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
-                    switch (reader.NodeType)
-                    {
-                        case XmlNodeType.Element:
-                            path.Add(reader.Name);
-                            break;
-                        case XmlNodeType.Text:
-                            switch (path[1])
-                            {
-                                case "biography":
-                                {
-                                    user.Biography = await reader.GetValueAsync();
-                                    break;
-                                }
-                                case "location":
-                                {
-                                    locationChanged = true; // if we're here then we're probably about to change the location.
-                                    // ReSharper disable once ConvertIfStatementToSwitchStatement
-                                    if (path[2] == "x")
-                                        user.Location.X = Convert.ToInt32
-                                            (await reader.GetValueAsync()); // GetValue only returns a string, i guess we just hope its a number lol
-                                    else if (path[2] == "y") user.Location.Y = Convert.ToInt32(await reader.GetValueAsync());
-                                    break;
-                                }
-                                case "icon":
-                                {
-                                    user.IconHash = await reader.GetValueAsync();
-                                    break;
-                                }
-                                case "planets":
-                                {
-                                    user.PlanetHash = await reader.GetValueAsync();
-                                    break;
-                                }
-                                case "yay2":
-                                {
-                                    user.YayHash = await reader.GetValueAsync();
-                                    break;
-                                }
-                                case "boo2":
-                                {
-                                    user.BooHash = await reader.GetValueAsync();
-                                    break;
-                                }
-                                case "meh2":
-                                {
-                                    user.MehHash = await reader.GetValueAsync();
-                                    break;
-                                }
-                            }
-
-                            break;
-                        case XmlNodeType.EndElement:
-                            path.RemoveAt(path.Count - 1);
-                            break;
-                    }
-            }
-
-            // the way location on a user card works is stupid and will not save with the way below as-is, so we do the following:
-            if (locationChanged) // only modify the database if we modify here
-            {
-                Location? l = await this.database.Locations.FirstOrDefaultAsync(l => l.Id == user.LocationId); // find the location in the database again
+                Location? l = await this.database.Locations.FirstOrDefaultAsync(l => l.Id == user.LocationId);
 
                 if (l == null)
-                {
-                    throw new Exception("this shouldn't happen ever but we handle this");
-                }
+                    throw new Exception
+                        ("This should never happen." + "If it did, it's because you created a user in the database manually without creating a Location.");
 
-                // set the location in the database to the one we modified above
-                l.X = user.Location.X;
-                l.Y = user.Location.Y;
-
-                // now both are in sync, and will update in the database.
+                l.X = updateUser.Location.X;
+                l.Y = updateUser.Location.Y;
             }
 
-            if (this.database.ChangeTracker.HasChanges()) await this.database.SaveChangesAsync(); // save the user to the database if we changed anything
+            await this.database.SaveChangesAsync();
             return this.Ok();
         }
 

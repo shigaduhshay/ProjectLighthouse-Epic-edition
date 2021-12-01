@@ -1,3 +1,4 @@
+using System;
 using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Serialization;
 
@@ -6,8 +7,8 @@ namespace LBPUnion.ProjectLighthouse.Types.Profiles
     /// <summary>
     ///     The location of a slot on a planet.
     /// </summary>
-    [XmlRoot("location")]
     [XmlType("location")]
+    [Serializable]
     public class Location
     {
         [XmlIgnore]
