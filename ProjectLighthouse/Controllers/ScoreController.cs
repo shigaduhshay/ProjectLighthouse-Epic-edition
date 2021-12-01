@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -80,9 +79,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
 
             await this.database.SaveChangesAsync();
 
-            string myRanking = GetScores(score.SlotId, score.Type, user);
-
-            return this.Ok(myRanking);
+            return this.Ok(GetScores(score.SlotId, score.Type, user));
         }
 
         [HttpGet("friendscores/user/{slotId:int}/{type:int}")]
@@ -103,7 +100,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
         }
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-        public string GetScores(int slotId, int type, User user, int pageStart = -1, int pageSize = 5)
+        public ScoreList GetScores(int slotId, int type, User user, int pageStart = -1, int pageSize = 5)
         {
             // This is hella ugly but it technically assigns the proper rank to a score
             // var needed for Anonymous type returned from SELECT
@@ -128,43 +125,16 @@ namespace LBPUnion.ProjectLighthouse.Controllers
             // Paginated viewing: if not requesting pageStart, get results around user
             var pagedScores = rankedScores.Skip(pageStart != -1 || myScore == null ? pageStart - 1 : myScore.Rank - 3).Take(Math.Min(pageSize, 30));
 
-            string serializedScores = pagedScores.Aggregate
-            (
-                string.Empty,
-                (current, rs) =>
-                {
-                    rs.Score.Rank = rs.Rank;
-                    return current + rs.Score.Serialize();
-                }
-            );
-
-            string res;
-            if (myScore == null)
+            foreach (var rs in pagedScores)
             {
-                res = LbpSerializer.StringElement("scores", serializedScores);
-            }
-            else
-            {
-                res = LbpSerializer.TaggedStringElement
-                (
-                    "scores",
-                    serializedScores,
-                    new Dictionary<string, object>()
-                    {
-                        {
-                            "yourScore", myScore.Score.Points
-                        },
-                        {
-                            "yourRank", myScore.Rank
-                        }, //This is the numerator of your position globally in the side menu.
-                        {
-                            "totalNumScores", rankedScores.Count()
-                        }, // This is the denominator of your position globally in the side menu.
-                    }
-                );
+                rs.Score.Rank = rs.Rank;
             }
 
-            return res;
+            ScoreList scoreList = myScore == null
+                ? new ScoreList(pagedScores.Select(rs => rs.Score).ToList())
+                : new ScoreListWithPlayerScore(pagedScores.Select(rs => rs.Score).ToList(), myScore.Score.Points, myScore.Rank, rankedScores.Count());
+
+            return scoreList;
         }
     }
 }

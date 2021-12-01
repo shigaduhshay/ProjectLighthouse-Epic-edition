@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace LBPUnion.ProjectLighthouse.Types.Settings
+namespace LBPUnion.ProjectLighthouse.Types
 {
     [XmlRoot("photos")]
     public class PhotoList
