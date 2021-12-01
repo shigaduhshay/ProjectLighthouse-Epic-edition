@@ -2,11 +2,9 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Xml.Serialization;
-using LBPUnion.ProjectLighthouse.Serialization;
 
 namespace LBPUnion.ProjectLighthouse.Types
 {
-//    [XmlRoot("subject")]
     [XmlType("subject")]
     [Serializable]
     public class PhotoSubject
@@ -24,18 +22,13 @@ namespace LBPUnion.ProjectLighthouse.Types
 
         [NotMapped]
         [XmlElement("npHandle")]
-        public string Username { get; set; }
+        public string Username => this.User.Username;
+
+        [NotMapped]
+        [XmlElement("displayName")]
+        public string DisplayName => this.User.Username;
 
         [XmlElement("bounds")]
         public string Bounds { get; set; }
-
-        public string Serialize()
-        {
-            string response = LbpSerializer.StringElement("npHandle", User.Username) +
-                              LbpSerializer.StringElement("displayName", User.Username) +
-                              LbpSerializer.StringElement("bounds", Bounds);
-
-            return LbpSerializer.StringElement("subject", response);
-        }
     }
 }

@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Kettu;
 using LBPUnion.ProjectLighthouse.Logging;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
+using LBPUnion.ProjectLighthouse.Types.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -73,8 +73,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
         public async Task<IActionResult> SlotPhotos(int id)
         {
             List<Photo> photos = await this.database.Photos.Include(p => p.Creator).Take(10).ToListAsync();
-            string response = photos.Aggregate(string.Empty, (s, photo) => s + photo.Serialize(id));
-            return this.Ok(LbpSerializer.StringElement("photos", response));
+            return this.Ok(new PhotoList(photos));
         }
 
         [HttpGet("photos/by")]
@@ -91,8 +90,8 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                 .Skip(pageStart - 1)
                 .Take(Math.Min(pageSize, 30))
                 .ToListAsync();
-            string response = photos.Aggregate(string.Empty, (s, photo) => s + photo.Serialize(0));
-            return this.Ok(LbpSerializer.StringElement("photos", response));
+
+            return this.Ok(new PhotoList(photos));
         }
 
         [HttpGet("photos/with")]
@@ -108,13 +107,9 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                 photos.AddRange(photo.Subjects.Where(subject => subject.User.UserId == userFromQuery.UserId).Select(_ => photo));
             }
 
-            string response = photos.OrderByDescending
-                    (s => s.Timestamp)
-                .Skip(pageStart - 1)
-                .Take(Math.Min(pageSize, 30))
-                .Aggregate(string.Empty, (s, photo) => s + photo.Serialize(0));
+            photos = photos.OrderByDescending(s => s.Timestamp).Skip(pageStart - 1).Take(Math.Min(pageSize, 30)).ToList();
 
-            return this.Ok(LbpSerializer.StringElement("photos", response));
+            return this.Ok(new PhotoList(photos));
         }
 
         [HttpPost("deletePhoto/{id:int}")]
