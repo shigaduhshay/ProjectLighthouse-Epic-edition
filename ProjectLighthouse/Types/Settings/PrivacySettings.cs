@@ -1,17 +1,13 @@
-using LBPUnion.ProjectLighthouse.Serialization;
+using System.Xml.Serialization;
 
 namespace LBPUnion.ProjectLighthouse.Types.Settings
 {
     public class PrivacySettings
     {
+        [XmlElement("levelVisibility")]
         public string LevelVisibility { get; set; }
-        public string ProfileVisibility { get; set; }
 
-        public string Serialize()
-            => LbpSerializer.StringElement
-            (
-                "privacySettings",
-                LbpSerializer.StringElement("levelVisibility", this.LevelVisibility) + LbpSerializer.StringElement("profileVisibility", this.ProfileVisibility)
-            );
+        [XmlElement("profileVisibility")]
+        public string ProfileVisibility { get; set; }
     }
 }
