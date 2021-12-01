@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Helpers;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Profiles;
 using Microsoft.AspNetCore.Mvc;
@@ -33,9 +32,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                 .Where(c => c.Target.Username == username)
                 .OrderByDescending(c => c.Timestamp)
                 .ToListAsync();
-
-            string outputXml = comments.Aggregate(string.Empty, (current, comment) => current + comment.Serialize());
-            return this.Ok(LbpSerializer.StringElement("comments", outputXml));
+            return this.Ok(new CommentList(comments));
         }
 
         [HttpPost("postUserComment/{username}")]

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Xml.Serialization;
-using LBPUnion.ProjectLighthouse.Serialization;
 
 namespace LBPUnion.ProjectLighthouse.Types.Profiles
 {
@@ -10,39 +10,41 @@ namespace LBPUnion.ProjectLighthouse.Types.Profiles
     public class Comment
     {
         [Key]
-        [XmlAttribute("id")]
+        [XmlElement("id")]
         public int CommentId { get; set; }
 
+        [XmlIgnore]
         public int PosterUserId { get; set; }
 
+        [XmlIgnore]
         public int TargetUserId { get; set; }
 
+        [XmlIgnore]
         [ForeignKey(nameof(PosterUserId))]
         public User Poster { get; set; }
 
+        [XmlIgnore]
         [ForeignKey(nameof(TargetUserId))]
         public User Target { get; set; }
 
+        [XmlElement("timestamp")]
         public long Timestamp { get; set; }
 
         [XmlElement("message")]
         public string Message { get; set; }
 
+        [XmlElement("thumbsup")]
         public int ThumbsUp { get; set; }
+
+        [XmlElement("thumbsdown")]
         public int ThumbsDown { get; set; }
 
-        private string serialize()
-            => LbpSerializer.StringElement("id", this.CommentId) +
-               LbpSerializer.StringElement("npHandle", this.Poster.Username) +
-               LbpSerializer.StringElement("timestamp", this.Timestamp) +
-               LbpSerializer.StringElement("message", this.Message) +
-               LbpSerializer.StringElement("thumbsup", this.ThumbsUp) +
-               LbpSerializer.StringElement("thumbsdown", this.ThumbsDown);
-
-        public string Serialize
-            (int yourThumb)
-            => LbpSerializer.StringElement("comment", this.serialize() + LbpSerializer.StringElement("yourthumb", yourThumb));
-
-        public string Serialize() => LbpSerializer.StringElement("comment", this.serialize());
+        [NotMapped]
+        [XmlElement("npHandle")]
+        [SuppressMessage("ReSharper", "ValueParameterNotUsed")]
+        public string PosterUsername {
+            get => this.Poster.Username;
+            set {}
+        }
     }
 }

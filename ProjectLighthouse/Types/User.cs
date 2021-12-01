@@ -10,7 +10,6 @@ namespace LBPUnion.ProjectLighthouse.Types
 {
     public class User
     {
-        public readonly ClientsConnected ClientsConnected = new();
         public int UserId { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
@@ -145,7 +144,6 @@ namespace LBPUnion.ProjectLighthouse.Types
                           LbpSerializer.StringElement("yay2", YayHash) +
                           LbpSerializer.StringElement("boo2", YayHash) +
                           LbpSerializer.StringElement("meh2", YayHash);
-            this.ClientsConnected.Serialize();
 
             return LbpSerializer.TaggedStringElement("user", user, "type", "user");
         }
