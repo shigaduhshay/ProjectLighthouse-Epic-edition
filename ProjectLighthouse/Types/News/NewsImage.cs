@@ -1,13 +1,14 @@
-using LBPUnion.ProjectLighthouse.Serialization;
+using System.Xml.Serialization;
 
 namespace LBPUnion.ProjectLighthouse.Types.News
 {
+    [XmlType("image")]
     public class NewsImage
     {
+        [XmlElement("hash")]
         public string Hash { get; set; }
-        public string Alignment { get; set; }
 
-        public string Serialize()
-            => LbpSerializer.StringElement("image", LbpSerializer.StringElement("hash", this.Hash) + LbpSerializer.StringElement("alignment", this.Alignment));
+        [XmlElement("alignment")]
+        public string Alignment { get; set; }
     }
 }

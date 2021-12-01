@@ -1,4 +1,3 @@
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types.News;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,26 +11,22 @@ namespace LBPUnion.ProjectLighthouse.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            string newsEntry = LbpSerializer.StringElement
-            (
-                "item",
-                new NewsEntry
+            NewsEntry newsEntry = new()
+            {
+                Category = "no_category",
+                Summary = "test summary",
+                Image = new NewsImage
                 {
-                    Category = "no_category",
-                    Summary = "test summary",
-                    Image = new NewsImage
-                    {
-                        Hash = "4947269c5f7061b27225611ee58a9a91a8031bbe",
-                        Alignment = "right",
-                    },
-                    Id = 1,
-                    Title = "Test Title",
-                    Text = "Test Text",
-                    Date = 1348755214000,
-                }.Serialize()
-            );
+                    Hash = "4947269c5f7061b27225611ee58a9a91a8031bbe",
+                    Alignment = "right",
+                },
+                Id = 1,
+                Title = "Test Title",
+                Text = "Test Text",
+                Timestamp = 1348755214000,
+            };
 
-            return this.Ok(LbpSerializer.StringElement("news", newsEntry));
+            return this.Ok(newsEntry);
         }
     }
 }
