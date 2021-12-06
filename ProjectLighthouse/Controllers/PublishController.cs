@@ -1,13 +1,14 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Helpers;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Lists;
 using LBPUnion.ProjectLighthouse.Types.Profiles;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -52,11 +53,8 @@ namespace LBPUnion.ProjectLighthouse.Controllers
 
             slot.ResourceCollection += "," + slot.IconHash; // tells LBP to upload icon after we process resources here
 
-            string resources = slot.Resources.Where
-                    (hash => !FileHelper.ResourceExists(hash))
-                .Aggregate("", (current, hash) => current + LbpSerializer.StringElement("resource", hash));
-
-            return this.Ok(LbpSerializer.TaggedStringElement("slot", resources, "type", "user"));
+            List<string> resources = slot.Resources.Where(hash => !FileHelper.ResourceExists(hash)).ToList();
+            return this.Ok(new ResourcesList(resources));
         }
 
         /// <summary>

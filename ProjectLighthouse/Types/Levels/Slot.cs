@@ -194,15 +194,15 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
         [XmlElement("leveltype")]
         public string LevelType { get; set; } = "";
 
-        public string SerializeResources()
-        {
-            return this.Resources.Aggregate("", (current, resource) => current + LbpSerializer.StringElement("resource", resource)) +
-                   LbpSerializer.StringElement("sizeOfResources", this.Resources.Sum(FileHelper.ResourceSize));
+        [NotMapped]
+        [XmlElement("sizeOfResources")]
+        public int Size {
+            get => this.Resources.Sum(FileHelper.ResourceSize);
+            set {}
         }
 
         public string Serialize(RatedLevel? yourRatingStats = null, VisitedLevel? yourVisitedStats = null)
         {
-
             string slotData = LbpSerializer.StringElement("name", this.Name) +
                               LbpSerializer.StringElement("id", this.SlotId) +
                               LbpSerializer.StringElement("game", (int)this.GameVersion) +
@@ -210,8 +210,6 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
                               LbpSerializer.StringElement("description", this.Description) +
                               LbpSerializer.StringElement("icon", this.IconHash) +
                               LbpSerializer.StringElement("rootLevel", this.RootLevel) +
-                              this.SerializeResources() +
-                              LbpSerializer.StringElement("location", this.Location?.Serialize()) +
                               LbpSerializer.StringElement("initiallyLocked", this.InitiallyLocked) +
                               LbpSerializer.StringElement("isSubLevel", this.SubLevel) +
                               LbpSerializer.StringElement("isLBP1Only", this.Lbp1Only) +

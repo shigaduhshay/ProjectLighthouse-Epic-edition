@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Helpers;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -47,7 +46,7 @@ namespace LBPUnion.ProjectLighthouse.Tests
         {
             HttpResponseMessage response = await this.AuthenticateResponse(number);
 
-            string responseContent = LbpSerializer.StringElement("loginResult", await response.Content.ReadAsStringAsync());
+            string responseContent = await response.Content.ReadAsStringAsync();
 
             XmlSerializer serializer = new(typeof(LoginResult));
             return (LoginResult)serializer.Deserialize(new StringReader(responseContent))!;

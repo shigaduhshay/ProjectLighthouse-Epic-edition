@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Helpers;
+using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Settings;
@@ -157,7 +157,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                             "hint_start", pageStart + Math.Min(pageSize, ServerSettings.Instance.EntitledSlots)
                         },
                         {
-                            "total", await StatisticsHelper.MMPicksCount()
+                            "total", await StatisticsHelper.TeamPickCount()
                         },
                     }
                 )

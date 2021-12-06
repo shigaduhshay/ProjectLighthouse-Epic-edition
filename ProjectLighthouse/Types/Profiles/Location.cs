@@ -1,6 +1,5 @@
 using System;
 using System.Xml.Serialization;
-using LBPUnion.ProjectLighthouse.Serialization;
 
 namespace LBPUnion.ProjectLighthouse.Types.Profiles
 {
@@ -19,7 +18,5 @@ namespace LBPUnion.ProjectLighthouse.Types.Profiles
 
         [XmlElement("y")]
         public int Y { get; set; }
-
-        public string Serialize() => LbpSerializer.StringElement("x", this.X) + LbpSerializer.StringElement("y", this.Y);
     }
 }

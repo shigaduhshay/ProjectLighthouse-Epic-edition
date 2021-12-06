@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -5,7 +6,6 @@ using System.Xml.Serialization;
 using Kettu;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Files;
 using LBPUnion.ProjectLighthouse.Types.Lists;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +19,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
     public class ResourcesController : ControllerBase
     {
         [HttpPost("showModerated")]
-        public IActionResult ShowModerated() => this.Ok(LbpSerializer.BlankElement("resources"));
+        public IActionResult ShowModerated() => this.Ok(new ResourcesList(new List<string>()));
 
         [HttpPost("filterResources")]
         [HttpPost("showNotUploaded")]
@@ -32,11 +32,8 @@ namespace LBPUnion.ProjectLighthouse.Controllers
 
             if (resourceList == null) return this.BadRequest();
 
-            string resources = resourceList.Resources.Where
-                    (s => !FileHelper.ResourceExists(s))
-                .Aggregate("", (current, hash) => current + LbpSerializer.StringElement("resource", hash));
-
-            return this.Ok(LbpSerializer.StringElement("resources", resources));
+            List<string> resources = resourceList.Resources.Where(s => !FileHelper.ResourceExists(s)).ToList();
+            return this.Ok(new ResourcesList(resources));
         }
 
         [ResponseCache(Duration = 86400)]

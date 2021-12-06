@@ -1,11 +1,11 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Lists;
@@ -86,7 +86,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
         [HttpGet("friendscores/user/{slotId:int}/{type:int}")]
         public IActionResult FriendScores(int slotId, int type)
             //=> await TopScores(slotId, type);
-            => this.Ok(LbpSerializer.BlankElement("scores"));
+            => this.Ok(new ScoreList(new List<Score>()));
 
         [HttpGet("topscores/user/{slotId:int}/{type:int}")]
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
