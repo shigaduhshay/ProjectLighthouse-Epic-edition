@@ -9,6 +9,8 @@ namespace LBPUnion.ProjectLighthouse.Types
             this.TotalSlotCount = totalSlotCount;
             this.TeamPickCount = teamPickCount;
         }
+        public PlanetStats()
+        {}
 
         [XmlElement("totalSlotCount")]
         public int TotalSlotCount { get; set; }

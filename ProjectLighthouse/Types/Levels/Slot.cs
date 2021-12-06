@@ -1,6 +1,7 @@
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Helpers;
@@ -14,6 +15,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
     /// </summary>
     [XmlRoot("slot")]
     [XmlType("slot")]
+    [SuppressMessage("ReSharper", "ValueParameterNotUsed")]
     public class Slot
     {
         [XmlAttribute("type")]
@@ -36,6 +38,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
         [XmlElement("rootLevel")]
         public string RootLevel { get; set; } = "";
 
+        [XmlIgnore]
         public string ResourceCollection { get; set; } = "";
 
         [NotMapped]
@@ -51,8 +54,16 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
         [XmlIgnore]
         public int CreatorId { get; set; }
 
+        [XmlIgnore]
         [ForeignKey(nameof(CreatorId))]
         public User? Creator { get; set; }
+
+        [NotMapped]
+        [XmlElement("npHandle")]
+        public string? CreatorUsername {
+            get => this.Creator?.Username;
+            set {}
+        }
 
         /// <summary>
         ///     The location of the level on the creator's earth
@@ -88,39 +99,49 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
         [XmlElement("moveRequired")]
         public bool MoveRequired { get; set; }
 
-        [XmlIgnore]
+        [XmlElement("firstPublished")]
         public long FirstUploaded { get; set; }
 
-        [XmlIgnore]
+        [XmlElement("lastUpdated")]
         public long LastUpdated { get; set; }
 
-        [XmlIgnore]
+        [XmlElement("mmpick")]
         public bool TeamPick { get; set; }
 
-        [XmlIgnore]
+        [XmlElement("game")]
         public GameVersion GameVersion { get; set; }
 
-        [XmlIgnore]
         [NotMapped]
+        [XmlElement("heartCount")]
         public int Hearts {
             get {
                 using Database database = new();
 
                 return database.HeartedLevels.Count(s => s.SlotId == this.SlotId);
             }
+            set {}
         }
 
-        [XmlIgnore]
         [NotMapped]
-        public int Plays => this.PlaysLBP1 + this.PlaysLBP2 + this.PlaysLBP3 + this.PlaysLBPVita;
+        [XmlElement("playCount")]
+        public int Plays {
+            get => this.PlaysLBP1 + this.PlaysLBP2 + this.PlaysLBP3 + this.PlaysLBPVita;
+            set {}
+        }
 
-        [XmlIgnore]
         [NotMapped]
-        public int PlaysUnique => this.PlaysLBP1Unique + this.PlaysLBP2Unique + this.PlaysLBP3Unique + this.PlaysLBPVitaUnique;
+        [XmlElement("uniquePlaycount")]
+        public int PlaysUnique {
+            get => this.PlaysLBP1Unique + this.PlaysLBP2Unique + this.PlaysLBP3Unique + this.PlaysLBPVitaUnique;
+            set {}
+        }
 
-        [XmlIgnore]
         [NotMapped]
-        public int PlaysComplete => this.PlaysLBP1Complete + this.PlaysLBP2Complete + this.PlaysLBP3Complete + this.PlaysLBPVitaComplete;
+        [XmlElement("completionCount")]
+        public int PlaysComplete {
+            get => this.PlaysLBP1Complete + this.PlaysLBP2Complete + this.PlaysLBP3Complete + this.PlaysLBPVitaComplete;
+            set {}
+        }
 
         [XmlIgnore]
         public int PlaysLBP1 { get; set; }
@@ -166,6 +187,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
 
                 return database.RatedLevels.Count(r => r.SlotId == this.SlotId && r.Rating == 1);
             }
+            set {}
         }
 
         [NotMapped]
@@ -176,6 +198,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
 
                 return database.RatedLevels.Count(r => r.SlotId == this.SlotId && r.Rating == -1);
             }
+            set {}
         }
 
         [NotMapped]
@@ -189,6 +212,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
 
                 return Enumerable.Average(ratedLevels, r => r.RatingLBP1);
             }
+            set {}
         }
 
         [XmlElement("leveltype")]
@@ -204,27 +228,6 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
         public string Serialize(RatedLevel? yourRatingStats = null, VisitedLevel? yourVisitedStats = null)
         {
             string slotData = LbpSerializer.StringElement("name", this.Name) +
-                              LbpSerializer.StringElement("id", this.SlotId) +
-                              LbpSerializer.StringElement("game", (int)this.GameVersion) +
-                              LbpSerializer.StringElement("npHandle", this.Creator?.Username) +
-                              LbpSerializer.StringElement("description", this.Description) +
-                              LbpSerializer.StringElement("icon", this.IconHash) +
-                              LbpSerializer.StringElement("rootLevel", this.RootLevel) +
-                              LbpSerializer.StringElement("initiallyLocked", this.InitiallyLocked) +
-                              LbpSerializer.StringElement("isSubLevel", this.SubLevel) +
-                              LbpSerializer.StringElement("isLBP1Only", this.Lbp1Only) +
-                              LbpSerializer.StringElement("shareable", this.Shareable) +
-                              LbpSerializer.StringElement("background", this.BackgroundHash) +
-                              LbpSerializer.StringElement("minPlayers", this.MinimumPlayers) +
-                              LbpSerializer.StringElement("maxPlayers", this.MaximumPlayers) +
-                              LbpSerializer.StringElement("moveRequired", this.MoveRequired) +
-                              LbpSerializer.StringElement("firstPublished", this.FirstUploaded) +
-                              LbpSerializer.StringElement("lastUpdated", this.LastUpdated) +
-                              LbpSerializer.StringElement("mmpick", this.TeamPick) +
-                              LbpSerializer.StringElement("heartCount", this.Hearts) +
-                              LbpSerializer.StringElement("playCount", this.Plays) +
-                              LbpSerializer.StringElement("uniquePlayCount", this.PlaysLBP2Unique) + // ??? good naming scheme lol
-                              LbpSerializer.StringElement("completionCount", this.PlaysComplete) +
                               LbpSerializer.StringElement("lbp1PlayCount", this.PlaysLBP1) +
                               LbpSerializer.StringElement("lbp1CompletionCount", this.PlaysLBP1Complete) +
                               LbpSerializer.StringElement("lbp1UniquePlayCount", this.PlaysLBP1Unique) +
@@ -237,10 +240,6 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
                               LbpSerializer.StringElement("lbpvitaPlayCount", this.PlaysLBPVita) +
                               LbpSerializer.StringElement("lbpvitaCompletionCount", this.PlaysLBPVitaComplete) +
                               LbpSerializer.StringElement("lbpvitaUniquePlayCount", this.PlaysLBPVitaUnique) +
-                              LbpSerializer.StringElement("thumbsup", this.Thumbsup) +
-                              LbpSerializer.StringElement("thumbsdown", this.Thumbsdown) +
-                              LbpSerializer.StringElement("averageRating", this.RatingLBP1) +
-                              LbpSerializer.StringElement("leveltype", this.LevelType) +
                               LbpSerializer.StringElement("yourRating", yourRatingStats?.RatingLBP1) +
                               LbpSerializer.StringElement("yourDPadRating", yourRatingStats?.Rating) +
                               LbpSerializer.StringElement("yourLBP1PlayCount", yourVisitedStats?.PlaysLBP1) +

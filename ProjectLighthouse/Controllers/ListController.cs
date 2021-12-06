@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Lists;
+using LBPUnion.ProjectLighthouse.Types.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,7 +35,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
 
             GameVersion gameVersion = token.GameVersion;
 
-            IEnumerable<QueuedLevel> queuedLevels = this.database.QueuedLevels.Include(q => q.User)
+            List<Slot> slots = await this.database.QueuedLevels.Include(q => q.User)
                 .Include(q => q.Slot)
                 .Include(q => q.Slot.Location)
                 .Include(q => q.Slot.Creator)
@@ -43,14 +43,17 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                 .Where(q => q.User.Username == username)
                 .Skip(pageStart - 1)
                 .Take(Math.Min(pageSize, 30))
-                .AsEnumerable();
-
-            string response = queuedLevels.Aggregate(string.Empty, (current, q) => current + q.Slot.Serialize());
+                .Select(q => q.Slot)
+                .ToListAsync();
 
             return this.Ok
             (
-                LbpSerializer.TaggedStringElement
-                    ("slots", response, "total", this.database.QueuedLevels.Include(q => q.User).Count(q => q.User.Username == username))
+                new SlotsList
+                (
+                    slots,
+                    pageStart + Math.Min(pageSize, ServerSettings.Instance.EntitledSlots),
+                    this.database.QueuedLevels.Include(q => q.User).Count(q => q.User.Username == username)
+                )
             );
         }
 
@@ -107,7 +110,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
 
             GameVersion gameVersion = token.GameVersion;
 
-            IEnumerable<HeartedLevel> heartedLevels = this.database.HeartedLevels.Include(q => q.User)
+            List<Slot> slots = await this.database.HeartedLevels.Include(q => q.User)
                 .Include(q => q.Slot)
                 .Include(q => q.Slot.Location)
                 .Include(q => q.Slot.Creator)
@@ -115,14 +118,17 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                 .Where(q => q.User.Username == username)
                 .Skip(pageStart - 1)
                 .Take(Math.Min(pageSize, 30))
-                .AsEnumerable();
-
-            string response = heartedLevels.Aggregate(string.Empty, (current, q) => current + q.Slot.Serialize());
+                .Select(q => q.Slot)
+                .ToListAsync();
 
             return this.Ok
             (
-                LbpSerializer.TaggedStringElement
-                    ("favouriteSlots", response, "total", this.database.HeartedLevels.Include(q => q.User).Count(q => q.User.Username == username))
+                new SlotsList
+                (
+                    slots,
+                    pageStart + Math.Min(pageSize, ServerSettings.Instance.EntitledSlots),
+                    this.database.HeartedLevels.Include(q => q.User).Count(q => q.User.Username == username)
+                )
             );
         }
 

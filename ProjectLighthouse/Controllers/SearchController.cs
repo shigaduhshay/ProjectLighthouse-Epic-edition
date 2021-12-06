@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Lists;
+using LBPUnion.ProjectLighthouse.Types.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,14 +45,9 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                          s.SlotId.ToString().Equals(keyword)
                 );
 
-            List<Slot> slots = await dbQuery
-                .Skip(pageStart - 1)
-                .Take(Math.Min(pageSize, 30))
-                .ToListAsync();
+            List<Slot> slots = await dbQuery.Skip(pageStart - 1).Take(Math.Min(pageSize, 30)).ToListAsync();
 
-            string response = slots.Aggregate("", (current, slot) => current + slot.Serialize());
-
-            return this.Ok(LbpSerializer.TaggedStringElement("slots", response, "total", dbQuery.Count()));
+            return this.Ok(new SlotsList(slots, pageStart + Math.Min(pageSize, ServerSettings.Instance.EntitledSlots), await dbQuery.CountAsync()));
         }
     }
 }

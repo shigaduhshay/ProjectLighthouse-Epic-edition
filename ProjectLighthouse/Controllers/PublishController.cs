@@ -117,7 +117,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
 
                 this.database.Entry(oldSlot).CurrentValues.SetValues(slot);
                 await this.database.SaveChangesAsync();
-                return this.Ok(oldSlot.Serialize());
+                return this.Ok(oldSlot);
             }
 
             //TODO: parse location in body
@@ -143,7 +143,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
             this.database.Slots.Add(slot);
             await this.database.SaveChangesAsync();
 
-            return this.Ok(slot.Serialize());
+            return this.Ok(slot);
         }
 
         [HttpPost("unpublish/{id:int}")]
