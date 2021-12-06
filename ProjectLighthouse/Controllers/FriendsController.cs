@@ -4,8 +4,8 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Helpers;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
+using LBPUnion.ProjectLighthouse.Types.Lists;
 using LBPUnion.ProjectLighthouse.Types.Profiles;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -77,21 +77,21 @@ namespace LBPUnion.ProjectLighthouse.Controllers
             User user = userAndToken.Value.Item1;
             GameToken gameToken = userAndToken.Value.Item2;
 
+            List<User> friends = new();
             if (!FriendHelper.FriendIdsByUserId.TryGetValue(user.UserId, out int[]? friendIds) || friendIds == null)
             {
-                return this.Ok(LbpSerializer.BlankElement("myFriends"));
+                return this.Ok(friends);
             }
 
-            string friends = "";
             foreach (int friendId in friendIds)
             {
                 User? friend = await this.database.Users.Include(u => u.Location).FirstOrDefaultAsync(u => u.UserId == friendId);
                 if (friend == null) continue;
 
-                friends += friend.Serialize(gameToken.GameVersion);
+                friends.Add(friend);
             }
 
-            return this.Ok(LbpSerializer.StringElement("myFriends", friends));
+            return this.Ok(new FriendsList(friends));
         }
     }
 }

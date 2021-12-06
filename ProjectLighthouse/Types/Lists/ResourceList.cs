@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace LBPUnion.ProjectLighthouse.Types
+namespace LBPUnion.ProjectLighthouse.Types.Lists
 {
     [XmlRoot("resources")]
     [XmlType("resources")]

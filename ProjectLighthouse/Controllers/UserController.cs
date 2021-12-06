@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
+using LBPUnion.ProjectLighthouse.Types.Lists;
 using LBPUnion.ProjectLighthouse.Types.Profiles;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -25,19 +25,16 @@ namespace LBPUnion.ProjectLighthouse.Controllers
             this.database = database;
         }
 
-        public async Task<string?> GetSerializedUser(string username, GameVersion gameVersion = GameVersion.LittleBigPlanet1)
-        {
-            User? user = await this.database.Users.Include(u => u.Location).FirstOrDefaultAsync(u => u.Username == username);
-            return user?.Serialize(gameVersion);
-        }
+        public async Task<User?> GetSerializedUser(string username)
+            => await this.database.Users.Include(u => u.Location).FirstOrDefaultAsync(u => u.Username == username);
 
         [HttpGet("user/{username}")]
         public async Task<IActionResult> GetUser(string username)
         {
-            GameToken? token = await this.database.GameTokenFromRequest(this.Request);
-            if (token == null) return this.StatusCode(403, "");
+//            GameToken? token = await this.database.GameTokenFromRequest(this.Request);
+//            if (token == null) return this.StatusCode(403, "");
 
-            string? user = await this.GetSerializedUser(username, token.GameVersion);
+            User? user = await this.GetSerializedUser(username);
             if (user == null) return this.NotFound();
 
             return this.Ok(user);
@@ -49,12 +46,15 @@ namespace LBPUnion.ProjectLighthouse.Controllers
             GameToken? token = await this.database.GameTokenFromRequest(this.Request);
             if (token == null) return this.StatusCode(403, "");
 
-            List<string?> serializedUsers = new();
-            foreach (string userId in u) serializedUsers.Add(await this.GetSerializedUser(userId, token.GameVersion));
+            List<User> serializedUsers = new();
+            foreach (string username in u)
+            {
+                User? user = await this.GetSerializedUser(username);
+                if (user == null) continue;
 
-            string serialized = serializedUsers.Aggregate(string.Empty, (current, user) => user == null ? current : current + user);
-
-            return this.Ok(LbpSerializer.StringElement("users", serialized));
+                serializedUsers.Add(user);
+            }
+            return this.Ok(new UsersList(serializedUsers));
         }
 
         [HttpGet("user/{username}/playlists")]
@@ -76,7 +76,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUser? updateUser)
         {
             #if DEBUG
-            IEnumerable<ModelError> errors = ModelState.Values.SelectMany(v => v.Errors);
+            IEnumerable<ModelError> errors = this.ModelState.Values.SelectMany(v => v.Errors);
             Console.WriteLine(JsonSerializer.Serialize(errors));
             #endif
 

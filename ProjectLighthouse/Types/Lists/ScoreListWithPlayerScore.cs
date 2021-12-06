@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace LBPUnion.ProjectLighthouse.Types
+namespace LBPUnion.ProjectLighthouse.Types.Lists
 {
     public class ScoreListWithPlayerScore : ScoreList
     {

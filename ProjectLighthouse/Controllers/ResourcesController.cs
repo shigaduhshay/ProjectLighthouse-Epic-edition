@@ -6,8 +6,8 @@ using Kettu;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Serialization;
-using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Files;
+using LBPUnion.ProjectLighthouse.Types.Lists;
 using Microsoft.AspNetCore.Mvc;
 using IOFile = System.IO.File;
 

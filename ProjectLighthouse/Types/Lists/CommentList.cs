@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Profiles;
 
-namespace LBPUnion.ProjectLighthouse.Types
+namespace LBPUnion.ProjectLighthouse.Types.Lists
 {
     [XmlRoot("comments")]
     public class CommentList

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Lists;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -174,13 +175,9 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                 .Take(Math.Min(pageSize, 30))
                 .AsEnumerable();
 
-            string response = heartedProfiles.Aggregate(string.Empty, (current, q) => current + q.HeartedUser.Serialize(token.GameVersion));
+            List<User> favouriteUsers = heartedProfiles.Select(h => h.HeartedUser).ToList();
 
-            return this.Ok
-            (
-                LbpSerializer.TaggedStringElement
-                    ("favouriteUsers", response, "total", this.database.HeartedProfiles.Include(q => q.User).Count(q => q.User.Username == username))
-            );
+            return this.Ok(new FavouriteUsersList(favouriteUsers, this.database.HeartedProfiles.Include(q => q.User).Count(q => q.User.Username == username)));
         }
 
         [HttpPost("favourite/user/{username}")]
