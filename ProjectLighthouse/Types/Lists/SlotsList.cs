@@ -7,6 +7,16 @@ namespace LBPUnion.ProjectLighthouse.Types.Lists
     [XmlType("slots")]
     public class SlotsList
     {
+
+        [XmlAttribute("hint_start")]
+        public int HintStart;
+
+        [XmlElement("slot")]
+        public List<Slot> Slots;
+
+        [XmlAttribute("total")]
+        public int Total;
+
         public SlotsList(List<Slot> slots, int hintStart, int total)
         {
             this.Slots = slots;
@@ -16,14 +26,5 @@ namespace LBPUnion.ProjectLighthouse.Types.Lists
 
         public SlotsList()
         {}
-
-        [XmlElement("slot")]
-        public List<Slot> Slots;
-
-        [XmlAttribute("hint_start")]
-        public int HintStart;
-
-        [XmlAttribute("total")]
-        public int Total;
     }
 }

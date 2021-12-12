@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,20 +14,26 @@ namespace LBPUnion.ProjectLighthouse.Pages
 {
     public class SlotsPage : BaseLayout
     {
-        public SlotsPage([NotNull] Database database) : base(database)
-        {}
+
+        public int PageAmount;
+
+        public int PageNumber;
 
         public int SlotCount;
 
         public List<Slot> Slots;
-
-        public int PageNumber;
+        public SlotsPage([NotNull] Database database) : base(database)
+        {}
 
         public async Task<IActionResult> OnGet([FromRoute] int pageNumber)
         {
             this.SlotCount = await StatisticsHelper.SlotCount();
 
             this.PageNumber = pageNumber;
+            this.PageAmount = (int)Math.Ceiling((double)this.SlotCount / ServerStatics.PageSize);
+
+            if (this.PageNumber < 0 || this.PageNumber >= this.PageAmount)
+                return this.Redirect($"/slots/{Math.Clamp(this.PageNumber, 0, this.PageAmount - 1)}");
 
             this.Slots = await this.Database.Slots.Include
                     (p => p.Creator)

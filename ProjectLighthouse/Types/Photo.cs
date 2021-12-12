@@ -13,6 +13,10 @@ namespace LBPUnion.ProjectLighthouse.Types
     [XmlType("photo")]
     public class Photo
     {
+
+        [NotMapped]
+        private List<PhotoSubject>? _subjects;
+
         [Key]
         [XmlElement("id")]
         public int PhotoId { get; set; }
@@ -32,9 +36,6 @@ namespace LBPUnion.ProjectLighthouse.Types
 
         [XmlElement("plan")]
         public string PlanHash { get; set; } = "";
-
-        [NotMapped]
-        private List<PhotoSubject>? _subjects;
 
         [NotMapped]
         [XmlArray("subjects")]

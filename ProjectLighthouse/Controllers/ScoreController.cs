@@ -80,7 +80,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
 
             await this.database.SaveChangesAsync();
 
-            return this.Ok(GetScores(score.SlotId, score.Type, user));
+            return this.Ok(this.GetScores(score.SlotId, score.Type, user));
         }
 
         [HttpGet("friendscores/user/{slotId:int}/{type:int}")]
@@ -97,7 +97,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
 
             if (user == null) return this.StatusCode(403, "");
 
-            return this.Ok(GetScores(slotId, type, user, pageStart, pageSize));
+            return this.Ok(this.GetScores(slotId, type, user, pageStart, pageSize));
         }
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -126,10 +126,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
             // Paginated viewing: if not requesting pageStart, get results around user
             var pagedScores = rankedScores.Skip(pageStart != -1 || myScore == null ? pageStart - 1 : myScore.Rank - 3).Take(Math.Min(pageSize, 30));
 
-            foreach (var rs in pagedScores)
-            {
-                rs.Score.Rank = rs.Rank;
-            }
+            foreach (var rs in pagedScores) rs.Score.Rank = rs.Rank;
 
             ScoreList scoreList = myScore == null
                 ? new ScoreList(pagedScores.Select(rs => rs.Score).ToList())

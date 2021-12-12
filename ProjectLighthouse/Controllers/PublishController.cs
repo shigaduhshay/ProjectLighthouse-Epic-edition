@@ -10,6 +10,7 @@ using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Lists;
 using LBPUnion.ProjectLighthouse.Types.Profiles;
+using LBPUnion.ProjectLighthouse.Types.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,6 +36,8 @@ namespace LBPUnion.ProjectLighthouse.Controllers
         {
             User? user = await this.database.UserFromGameRequest(this.Request);
             if (user == null) return this.StatusCode(403, "");
+
+            if (user.UsedSlots >= ServerSettings.Instance.EntitledSlots) return this.BadRequest();
 
             Slot? slot = await this.GetSlotFromBody();
             if (slot == null) return this.BadRequest(); // if the level cant be parsed then it obviously cant be uploaded
@@ -71,6 +74,8 @@ namespace LBPUnion.ProjectLighthouse.Controllers
             // ReSharper disable once PossibleInvalidOperationException
             User user = userAndToken.Value.Item1;
             GameToken gameToken = userAndToken.Value.Item2;
+
+            if (user.UsedSlots >= ServerSettings.Instance.EntitledSlots) return this.BadRequest();
 
             Slot? slot = await this.GetSlotFromBody();
             if (slot?.Location == null) return this.BadRequest();
@@ -114,6 +119,12 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                 slot.TeamPick = oldSlot.TeamPick;
 
                 slot.GameVersion = gameToken.GameVersion;
+
+                if (slot.MinimumPlayers == 0 || slot.MaximumPlayers == 0)
+                {
+                    slot.MinimumPlayers = 1;
+                    slot.MaximumPlayers = 4;
+                }
 
                 this.database.Entry(oldSlot).CurrentValues.SetValues(slot);
                 await this.database.SaveChangesAsync();

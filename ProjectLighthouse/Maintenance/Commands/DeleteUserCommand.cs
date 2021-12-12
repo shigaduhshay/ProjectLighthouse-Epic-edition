@@ -2,25 +2,23 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Types;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBPUnion.ProjectLighthouse.Maintenance.Commands
 {
     [UsedImplicitly]
-    public class ResetPasswordCommand : ICommand
+    public class DeleteUserCommand : ICommand
     {
         private readonly Database database = new();
-        public string Name() => "Reset Password";
+        public string Name() => "Delete/Ban User";
         public string[] Aliases()
             => new[]
             {
-                "setPassword", "resetPassword", "passwd", "password",
+                "deleteUser", "wipeUser", "banUser",
             };
-        public string Arguments() => "<username/userId> <sha256/plaintext>";
-        public int RequiredArgs() => 2;
-
+        public string Arguments() => "<username/userId>";
+        public int RequiredArgs() => 1;
         public async Task Run(string[] args)
         {
             User? user = await this.database.Users.FirstOrDefaultAsync(u => u.Username == args[0]);
@@ -35,15 +33,8 @@ namespace LBPUnion.ProjectLighthouse.Maintenance.Commands
                     Console.WriteLine($"Could not find user by parameter '{args[0]}'");
                     return;
                 }
-            string password = args[1];
-            if (password.Length != 64) password = HashHelper.Sha256Hash(password);
 
-            user.Password = HashHelper.BCryptHash(password);
-            user.PasswordResetRequired = true;
-
-            await this.database.SaveChangesAsync();
-
-            Console.WriteLine($"The password for user {user.Username} (id: {user.UserId}) has been reset.");
+            await this.database.RemoveUser(user);
         }
     }
 }

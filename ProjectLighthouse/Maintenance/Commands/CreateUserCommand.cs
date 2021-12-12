@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿#nullable enable
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Kettu;
 using LBPUnion.ProjectLighthouse.Helpers;
@@ -43,7 +44,7 @@ namespace LBPUnion.ProjectLighthouse.Maintenance.Commands
         public string[] Aliases()
             => new[]
             {
-                "useradd", "adduser", "newuser", "createUser"
+                "useradd", "adduser", "newuser", "createUser",
             };
 
         public string Arguments() => "<OnlineID> <Password>";

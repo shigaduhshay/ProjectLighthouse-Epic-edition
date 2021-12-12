@@ -69,7 +69,7 @@ namespace LBPUnion.ProjectLighthouse.Pages
         [SuppressMessage("ReSharper", "SpecifyStringComparison")]
         public IActionResult OnGet()
         {
-            Error = string.Empty;
+            this.Error = string.Empty;
             if (!ServerSettings.Instance.RegistrationEnabled) return this.NotFound();
 
             return this.Page();

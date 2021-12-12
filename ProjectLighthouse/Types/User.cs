@@ -39,7 +39,12 @@ namespace LBPUnion.ProjectLighthouse.Types
 
         [NotMapped]
         [XmlElement("reviewCount")]
-        public int Reviews => 0;
+        public int Reviews {
+            get {
+                using Database database = new();
+                return database.Reviews.Count(r => r.ReviewerId == this.UserId);
+            }
+        }
 
         [NotMapped]
         [XmlElement("commentCount")]
@@ -129,7 +134,7 @@ namespace LBPUnion.ProjectLighthouse.Types
         }
 
         [XmlIgnore]
-        public bool IsAdmin { get; set; } = false;
+        public bool IsAdmin { get; set; }
 
         [XmlIgnore]
         public bool PasswordResetRequired { get; set; }
@@ -187,21 +192,21 @@ namespace LBPUnion.ProjectLighthouse.Types
         [NotMapped]
         [XmlElement("lbp1UsedSlots")]
         public int UsedSlotsLBP1 {
-            get => GetUsedSlotsForGame(GameVersion.LittleBigPlanet1);
+            get => this.GetUsedSlotsForGame(GameVersion.LittleBigPlanet1);
             set {}
         }
 
         [NotMapped]
         [XmlElement("lbp2UsedSlots")]
         public int UsedSlotsLBP2 {
-            get => GetUsedSlotsForGame(GameVersion.LittleBigPlanet2);
+            get => this.GetUsedSlotsForGame(GameVersion.LittleBigPlanet2);
             set {}
         }
 
         [NotMapped]
         [XmlElement("lbp3UsedSlots")]
         public int UsedSlotsLBP3 {
-            get => GetUsedSlotsForGame(GameVersion.LittleBigPlanet3);
+            get => this.GetUsedSlotsForGame(GameVersion.LittleBigPlanet3);
             set {}
         }
 
@@ -215,14 +220,14 @@ namespace LBPUnion.ProjectLighthouse.Types
         [NotMapped]
         [XmlElement("lbp2EntitledSlots")]
         public int EntitledSlotsLBP2 {
-            get => EntitledSlots;
+            get => this.EntitledSlots;
             set {}
         }
 
         [NotMapped]
         [XmlElement("lbp3EntitledSlots")]
         public int EntitledSlotsLBP3 {
-            get => EntitledSlots;
+            get => this.EntitledSlots;
             set {}
         }
 
@@ -261,7 +266,7 @@ namespace LBPUnion.ProjectLighthouse.Types
         #nullable enable
         public override bool Equals(object? obj)
         {
-            if (obj is User user) return user.UserId == UserId;
+            if (obj is User user) return user.UserId == this.UserId;
 
             return false;
         }

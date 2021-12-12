@@ -65,7 +65,7 @@ namespace LBPUnion.ProjectLighthouse.Pages
         [UsedImplicitly]
         public async Task<IActionResult> OnGet()
         {
-            Error = string.Empty;
+            this.Error = string.Empty;
             return this.Page();
         }
     }
