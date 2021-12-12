@@ -57,7 +57,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
             slot.ResourceCollection += "," + slot.IconHash; // tells LBP to upload icon after we process resources here
 
             List<string> resources = slot.Resources.Where(hash => !FileHelper.ResourceExists(hash)).ToList();
-            return this.Ok(new ResourcesList(resources));
+            return this.Ok(new ResourcesInSlotList(resources));
         }
 
         /// <summary>

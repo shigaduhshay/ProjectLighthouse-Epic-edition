@@ -6,7 +6,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Lists
     [XmlRoot("resources")]
     public class ResourcesList
     {
-        [XmlElement("playRecord")]
+        [XmlElement("resource")]
         public List<string> Resources;
 
         public ResourcesList()
