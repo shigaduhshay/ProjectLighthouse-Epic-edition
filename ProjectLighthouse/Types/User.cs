@@ -235,6 +235,7 @@ namespace LBPUnion.ProjectLighthouse.Types
         ///     The number of slots remaining on the earth
         /// </summary>
         [NotMapped]
+        [XmlElement("freeSlots")]
         public int FreeSlots {
             get => ServerSettings.Instance.EntitledSlots - this.UsedSlots;
             set {}

@@ -227,7 +227,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
         }
 
         [XmlElement("leveltype")]
-        public string LevelType { get; set; } = "";
+        public LevelType LevelType { get; set; } = LevelType.Normal;
 
         [NotMapped]
         [XmlElement("sizeOfResources")]
@@ -258,7 +258,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
                               LbpSerializer.StringElement("yourLBP3PlayCount", yourVisitedStats?.PlaysLBP3) +
                               LbpSerializer.StringElement
                                   ("yourLBPVitaPlayCount", yourVisitedStats?.PlaysLBPVita) + // i doubt this is the right name but we'll go with it
-                              yourReview?.Serialize("yourReview") +
+//                              yourReview?.Serialize("yourReview") +
                               LbpSerializer.StringElement("reviewsEnabled", true) +
                               LbpSerializer.StringElement("commentsEnabled", false) +
                               LbpSerializer.StringElement("reviewCount", this.ReviewCount);

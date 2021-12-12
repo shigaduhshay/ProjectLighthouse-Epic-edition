@@ -1,10 +1,7 @@
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.IO;
-using System.Xml;
 using System.Xml.Serialization;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 
 namespace LBPUnion.ProjectLighthouse.Types.Reviews
@@ -59,36 +56,5 @@ namespace LBPUnion.ProjectLighthouse.Types.Reviews
 
         [XmlElement("thumbsdown")]
         public int ThumbsDown { get; set; }
-
-        public string Serialize
-            (RatedLevel? yourLevelRating = null, RatedReview? yourRatingStats = null)
-            => this.Serialize("review", yourLevelRating, yourRatingStats);
-
-        public string Serialize(string elementOverride, RatedLevel? yourLevelRating = null, RatedReview? yourRatingStats = null)
-        {
-
-            XmlWriterSettings settings = new();
-            settings.OmitXmlDeclaration = true;
-
-            XmlSerializer serializer = new(typeof(DeletedBy));
-            StringWriter stringWriter = new();
-            using (XmlWriter xmlWriter = XmlWriter.Create(stringWriter, settings)) serializer.Serialize(xmlWriter, this.DeletedBy);
-            string deletedBy = stringWriter.ToString();
-
-            string reviewData = LbpSerializer.TaggedStringElement("slot_id", this.SlotId, "type", this.Slot.Type) +
-                                LbpSerializer.StringElement("reviewer", this.Reviewer.Username) +
-                                LbpSerializer.StringElement("thumb", this.Thumb) +
-                                LbpSerializer.StringElement("timestamp", this.Timestamp) +
-                                LbpSerializer.StringElement("labels", this.LabelCollection) +
-                                LbpSerializer.StringElement("deleted", this.Deleted) +
-                                deletedBy +
-                                LbpSerializer.StringElement("text", this.Text) +
-                                LbpSerializer.StringElement("thumbsup", this.ThumbsUp) +
-                                LbpSerializer.StringElement("thumbsdown", this.ThumbsDown) +
-                                LbpSerializer.StringElement("yourthumb", yourRatingStats?.Thumb == null ? 0 : yourRatingStats?.Thumb);
-
-            return LbpSerializer.TaggedStringElement(elementOverride, reviewData, "id", this.SlotId + "." + this.Reviewer.Username);
-        }
     }
-
 }

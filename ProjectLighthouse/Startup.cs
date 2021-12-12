@@ -78,6 +78,41 @@ namespace LBPUnion.ProjectLighthouse
 
             app.UseForwardedHeaders();
 
+            // Logs request response
+            #if DEBUG
+            app.Use
+            (
+                async (context, next) =>
+                {
+                    Stream originalBody = context.Response.Body;
+                    try
+                    {
+                        await using MemoryStream memStream = new();
+                        context.Response.Body = memStream;
+
+                        await next(context);
+
+                        memStream.Position = 0;
+                        string responseBody = await new StreamReader(memStream).ReadToEndAsync();
+
+                        memStream.Position = 0;
+                        await memStream.CopyToAsync(originalBody);
+
+                        Logger.Log("dumping response!!!!", LoggerLevelHttp.Instance);
+                        foreach (string line in responseBody.Split("\n"))
+                        {
+                            Logger.Log(line, LoggerLevelHttp.Instance);
+                        }
+
+                    }
+                    finally
+                    {
+                        context.Response.Body = originalBody;
+                    }
+                }
+            );
+            #endif
+
             // Logs every request and the response to it
             // Example: "200, 13ms: GET /LITTLEBIGPLANETPS3_XML/news"
             // Example: "404, 127ms: GET /asdasd?query=osucookiezi727ppbluezenithtopplayhdhr"

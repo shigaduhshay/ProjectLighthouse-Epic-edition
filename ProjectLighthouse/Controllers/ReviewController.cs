@@ -6,9 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Helpers;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Lists;
 using LBPUnion.ProjectLighthouse.Types.Reviews;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -171,7 +171,7 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                 yourReview.Timestamp = TimeHelper.UnixTimeMilliseconds();
             }
 
-            IQueryable<Review?> reviews = this.database.Reviews.Where(r => r.SlotId == slotId && r.Slot.GameVersion <= gameVersion)
+            IQueryable<Review> reviews = this.database.Reviews.Where(r => r.SlotId == slotId && r.Slot.GameVersion <= gameVersion)
                 .Include(r => r.Reviewer)
                 .Include(r => r.Slot)
                 .OrderByDescending(r => r.ThumbsUp)
@@ -179,38 +179,13 @@ namespace LBPUnion.ProjectLighthouse.Controllers
                 .Skip(pageStart - 1)
                 .Take(pageSize);
 
-            IEnumerable<Review?> prependedReviews;
+            List<Review> prependedReviews;
             if (canNowReviewLevel) // this can only be true if you have not posted a review but have visited the level
                 // prepend the fake review to the top of the list to be easily edited
-                prependedReviews = reviews.ToList().Prepend(yourReview);
+                prependedReviews = reviews.Prepend(yourReview).ToList()!;
             else prependedReviews = reviews.ToList();
 
-            string inner = prependedReviews.Aggregate
-            (
-                string.Empty,
-                (current, review) =>
-                {
-                    if (review == null) return current;
-
-                    return current + review.Serialize();
-                }
-            );
-
-            string response = LbpSerializer.TaggedStringElement
-            (
-                "reviews",
-                inner,
-                new Dictionary<string, object>
-                {
-                    {
-                        "hint_start", pageStart + pageSize
-                    },
-                    {
-                        "hint", pageStart // not sure
-                    },
-                }
-            );
-            return this.Ok(response);
+            return this.Ok(new ReviewList(pageStart + pageSize, pageStart, prependedReviews));
         }
 
         [HttpGet("reviewsBy/{username}")]
@@ -226,40 +201,15 @@ namespace LBPUnion.ProjectLighthouse.Controllers
 
             GameVersion gameVersion = gameToken.GameVersion;
 
-            IEnumerable<Review> reviews = this.database.Reviews.Where(r => r.Reviewer.Username == username && r.Slot.GameVersion <= gameVersion)
+            List<Review> reviews = await this.database.Reviews.Where(r => r.Reviewer.Username == username && r.Slot.GameVersion <= gameVersion)
                 .Include(r => r.Reviewer)
                 .Include(r => r.Slot)
                 .OrderByDescending(r => r.Timestamp)
                 .Skip(pageStart - 1)
-                .Take(pageSize);
+                .Take(pageSize)
+                .ToListAsync();
 
-            string inner = reviews.Aggregate
-            (
-                string.Empty,
-                (current, review) =>
-                {
-                    //RatedLevel? ratedLevel = this.database.RatedLevels.FirstOrDefault(r => r.SlotId == review.SlotId && r.UserId == user.UserId);
-                    //RatedReview? ratedReview = this.database.RatedReviews.FirstOrDefault(r => r.ReviewId == review.ReviewId && r.UserId == user.UserId);
-                    return current + review.Serialize( /*, ratedReview*/);
-                }
-            );
-
-            string response = LbpSerializer.TaggedStringElement
-            (
-                "reviews",
-                inner,
-                new Dictionary<string, object>
-                {
-                    {
-                        "hint_start", pageStart
-                    },
-                    {
-                        "hint", reviews.Last().Timestamp // Seems to be the timestamp of oldest
-                    },
-                }
-            );
-
-            return this.Ok(response);
+            return this.Ok(new ReviewList(pageStart, (int)reviews.Last().Timestamp, reviews));
         }
 
         [HttpPost("rateReview/user/{slotId:int}/{username}")]
