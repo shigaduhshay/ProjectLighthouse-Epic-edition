@@ -79,7 +79,12 @@ namespace LBPUnion.ProjectLighthouse.Helpers
             return LbpFileType.Unknown; // Still unknown.
         }
 
-        public static bool ResourceExists(string hash) => File.Exists(GetResourcePath(hash));
+        public static bool ResourceExists(string hash)
+        {
+            if (hash.StartsWith('g')) return true;
+
+            return File.Exists(GetResourcePath(hash));
+        }
 
         public static int ResourceSize(string hash)
         {
