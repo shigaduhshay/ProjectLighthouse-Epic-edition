@@ -4,7 +4,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
 {
     public enum LevelType
     {
-        [XmlEnum("normal")]
+        [XmlEnum("")]
         Normal = 0,
 
         [XmlEnum("versus")]
