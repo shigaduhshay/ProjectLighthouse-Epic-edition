@@ -80,6 +80,9 @@ namespace LBPUnion.ProjectLighthouse.Controllers
             Slot? slot = await this.GetSlotFromBody();
             if (slot?.Location == null) return this.BadRequest();
 
+            if (string.IsNullOrEmpty(slot.Name)) slot.Name = "Unnamed Level";
+            if (string.IsNullOrEmpty(slot.Description)) slot.Description = "This level has no description.";
+
             // Republish logic
             if (slot.SlotId != 0)
             {

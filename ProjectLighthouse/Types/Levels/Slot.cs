@@ -28,10 +28,10 @@ namespace LBPUnion.ProjectLighthouse.Types.Levels
         public int SlotId { get; set; }
 
         [XmlElement("name")]
-        public string Name { get; set; } = "";
+        public string Name { get; set; } = "Unnamed Level";
 
         [XmlElement("description")]
-        public string Description { get; set; } = "";
+        public string Description { get; set; } = "This level has no description.";
 
         [XmlElement("icon")]
         public string IconHash { get; set; } = "";
