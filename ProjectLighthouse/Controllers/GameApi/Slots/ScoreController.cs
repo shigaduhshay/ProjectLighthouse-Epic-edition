@@ -6,10 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
+using LBPUnion.ProjectLighthouse.Types.Activity;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace LBPUnion.ProjectLighthouse.Controllers.GameApi.Slots;
 
@@ -66,7 +69,8 @@ public class ScoreController : ControllerBase
 
         IQueryable<Score> existingScore = this.database.Scores.Where(s => s.SlotId == score.SlotId && s.PlayerIdCollection == score.PlayerIdCollection);
 
-        if (existingScore.Any())
+        bool isExistingScore = existingScore.Any();
+        if (isExistingScore)
         {
             Score first = existingScore.First(s => s.SlotId == score.SlotId);
             score.ScoreId = first.ScoreId;
@@ -76,6 +80,27 @@ public class ScoreController : ControllerBase
         else
         {
             this.database.Scores.Add(score);
+        }
+
+        await this.database.SaveChangesAsync();
+
+        if (isExistingScore)
+        {
+            ActivityEntry? entry = await this.database.ActivityLog.FirstOrDefaultAsync(e => e.Type == EventType.NewScore && e.RelatedId == score.ScoreId);
+            entry.Timestamp = TimestampHelper.TimestampMillis;
+        }
+        else
+        {
+            this.database.ActivityLog.Add
+            (
+                new ActivityEntry
+                {
+                    User = user,
+                    Type = EventType.NewScore,
+                    Timestamp = TimestampHelper.TimestampMillis,
+                    RelatedId = score.ScoreId,
+                }
+            );
         }
 
         await this.database.SaveChangesAsync();
