@@ -84,10 +84,10 @@ public class ScoreController : ControllerBase
 
         await this.database.SaveChangesAsync();
 
-        if (isExistingScore)
+        ActivityEntry? scoreEntry = await this.database.ActivityLog.FirstOrDefaultAsync(e => e.Type == EventType.NewScore && e.RelatedId == score.ScoreId);
+        if (isExistingScore && scoreEntry != null)
         {
-            ActivityEntry? entry = await this.database.ActivityLog.FirstOrDefaultAsync(e => e.Type == EventType.NewScore && e.RelatedId == score.ScoreId);
-            entry.Timestamp = TimestampHelper.TimestampMillis;
+            scoreEntry.Timestamp = TimestampHelper.TimestampMillis;
         }
         else
         {
