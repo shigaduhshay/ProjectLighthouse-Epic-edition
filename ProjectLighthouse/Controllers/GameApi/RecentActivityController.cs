@@ -6,6 +6,7 @@ using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Activity;
+using LBPUnion.ProjectLighthouse.Types.Activity.Events;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using IOFile = System.IO.File;
@@ -24,6 +25,34 @@ public class RecentActivityController : ControllerBase
         this.database = database;
     }
 
+    private async Task<List<LevelGroup>> getActivityInvolvingLevels()
+    {
+        List<ActivityEntry> activityEntries = await this.database.ActivityLog.Include(e => e.User).OrderByDescending(l => l.Timestamp).Take(20).ToListAsync();
+
+        List<LevelGroup> levelGroups = new();
+
+        foreach (ActivityEntry entry in activityEntries.Where(entry => entry.Type == EventType.NewScore))
+        {
+            Score? score = await this.database.Scores.FirstOrDefaultAsync(s => s.ScoreId == entry.RelatedId);
+            if (score == null) continue;
+
+            LevelGroup levelGroup = levelGroups.GetOrCreateLevelGroup(score.SlotId);
+            UserGroup userGroup = levelGroup.GetOrCreateUserGroup(entry.User);
+
+            userGroup.Events.Add
+            (
+                new NewScoreEvent
+                {
+                    Timestamp = entry.Timestamp,
+                    Score = score,
+                    User = entry.User,
+                }
+            );
+        }
+
+        return levelGroups;
+    }
+
     [HttpGet("stream")]
     public async Task<IActionResult> GetStream([FromQuery] long timestamp = 0)
     {
@@ -33,45 +62,7 @@ public class RecentActivityController : ControllerBase
 //        return this.Ok(IOFile.ReadAllText("/home/jvyden/.config/JetBrains/Rider2021.3/scratches/recent-activity.xml"));
         if (timestamp == 0) timestamp = TimestampHelper.TimestampMillis;
 
-        List<LevelGroup> levelGroups = new();
-
-        List<Score> scores = await this.database.Scores.OrderByDescending(s => s.ScoreId).Take(20).ToListAsync();
-        foreach (Score score in scores)
-        {
-            LevelGroup? levelGroup = levelGroups.FirstOrDefault(l => l.SlotId == score.SlotId);
-            if (levelGroup == null)
-            {
-                levelGroup = new LevelGroup
-                {
-                    SlotId = score.SlotId,
-                    UserGroups = new List<UserGroup>(),
-                };
-
-                levelGroups.Add(levelGroup);
-            }
-
-            UserGroup? userGroup = levelGroup.UserGroups.FirstOrDefault(u => u.User.Username == score.PlayerIds[0]);
-            User scoreUser = this.database.Users.First(u => u.Username == score.PlayerIds[0]);
-            if (userGroup == null)
-            {
-                userGroup = new UserGroup
-                {
-                    User = scoreUser,
-                    Events = new List<IEvent>(),
-                };
-
-                levelGroup.UserGroups.Add(userGroup);
-            }
-
-            userGroup.Events.Add
-            (
-                new NewScoreEvent
-                {
-                    Score = score,
-                    User = scoreUser,
-                }
-            );
-        }
+        List<LevelGroup> levelGroups = await this.getActivityInvolvingLevels();
 
         string groups = levelGroups.Aggregate(string.Empty, (current, levelGroup) => current + levelGroup.Serialize());
 
