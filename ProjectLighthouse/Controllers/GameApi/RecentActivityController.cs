@@ -31,6 +31,7 @@ public class RecentActivityController : ControllerBase
 
         List<LevelGroup> levelGroups = new();
 
+        // Scores
         foreach (ActivityEntry entry in activityEntries.Where(entry => entry.Type == EventType.NewScore))
         {
             Score? score = await this.database.Scores.FirstOrDefaultAsync(s => s.ScoreId == entry.RelatedId);
@@ -54,7 +55,7 @@ public class RecentActivityController : ControllerBase
     }
 
     [HttpGet("stream")]
-    public async Task<IActionResult> GetStream([FromQuery] long timestamp = 0)
+    public async Task<IActionResult> GetStream([FromQuery] long timestamp = 0, [FromQuery] bool excludeNews = false)
     {
         User? user = await this.database.UserFromGameRequest(this.Request);
         if (user == null) return this.StatusCode(403, "");
@@ -66,15 +67,36 @@ public class RecentActivityController : ControllerBase
 
         string groups = levelGroups.Aggregate(string.Empty, (current, levelGroup) => current + levelGroup.Serialize());
 
-        return this.Ok
+        string news = string.Empty;
+        if (!excludeNews)
+        {
+            List<ActivityEntry> newsEntries = await this.database.ActivityLog.Where(e => e.Type == EventType.NewsPost).ToListAsync();
+
+            // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
+            foreach (ActivityEntry newsEntry in newsEntries)
+            {
+                NewsPostEvent newsEvent = new()
+                {
+                    Timestamp = newsEntry.Timestamp,
+                    User = null,
+                    NewsPostId = newsEntry.RelatedId,
+                };
+
+                news += newsEvent.Serialize();
+            }
+        }
+        string serialized = LbpSerializer.StringElement
         (
-            LbpSerializer.StringElement
-            (
-                "stream",
-                LbpSerializer.StringElement("start_timestamp", timestamp - 604800000) + // Start timestamp is current timestamp minus 1 week
-                LbpSerializer.StringElement("end_timestamp", timestamp) +
-                LbpSerializer.StringElement("groups", groups)
-            )
+            "stream",
+            LbpSerializer.StringElement("start_timestamp", timestamp - 604800000) + // Start timestamp is current timestamp minus 1 week
+            LbpSerializer.StringElement("end_timestamp", timestamp) +
+            LbpSerializer.StringElement("groups", groups) +
+            LbpSerializer.StringElement("news", news)
         );
+
+        #if DEBUG
+        await IOFile.WriteAllTextAsync("recent-activity.xml", serialized);
+        #endif
+        return this.Ok(serialized);
     }
 }

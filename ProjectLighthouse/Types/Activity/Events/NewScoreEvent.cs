@@ -9,7 +9,6 @@ public class NewScoreEvent : IEvent
     public User User { get; init; }
     public Score Score { get; init; }
 
-    public string EventType => "score";
     public string Serialize()
     {
         string @event = LbpSerializer.StringElement("timestamp", this.Timestamp) +
