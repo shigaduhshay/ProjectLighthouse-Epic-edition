@@ -373,6 +373,32 @@ namespace ProjectLighthouse.Migrations
                     b.ToTable("VisitedLevels");
                 });
 
+            modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.News.NewsEntry", b =>
+                {
+                    b.Property<int>("NewsId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Category")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Summary")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("longtext");
+
+                    b.Property<long>("Timestamp")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("NewsId");
+
+                    b.ToTable("NewsEntries");
+                });
+
             modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Photo", b =>
                 {
                     b.Property<int>("PhotoId")

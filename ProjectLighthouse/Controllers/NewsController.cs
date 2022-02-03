@@ -24,10 +24,10 @@ public class NewsController : ControllerBase
                     Hash = "4947269c5f7061b27225611ee58a9a91a8031bbe",
                     Alignment = "right",
                 },
-                Id = 1,
+                NewsId = 1,
                 Title = "Test Title",
                 Text = "Test Text",
-                Date = 1348755214000,
+                Timestamp = 1348755214000,
             }.Serialize()
         );
 

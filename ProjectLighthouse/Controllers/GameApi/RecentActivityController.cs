@@ -7,6 +7,7 @@ using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Activity;
 using LBPUnion.ProjectLighthouse.Types.Activity.Events;
+using LBPUnion.ProjectLighthouse.Types.News;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using IOFile = System.IO.File;
@@ -70,19 +71,16 @@ public class RecentActivityController : ControllerBase
         string news = string.Empty;
         if (!excludeNews)
         {
-            List<ActivityEntry> newsEntries = await this.database.ActivityLog.Where(e => e.Type == EventType.NewsPost).ToListAsync();
-
             // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-            foreach (ActivityEntry newsEntry in newsEntries)
+            foreach (NewsEntry newsEntry in await this.database.NewsEntries.ToListAsync())
             {
-                NewsPostEvent newsEvent = new()
-                {
-                    Timestamp = newsEntry.Timestamp,
-                    User = null,
-                    NewsPostId = newsEntry.RelatedId,
-                };
+                news += LbpSerializer.StringElement("item", newsEntry.Serialize());
 
-                news += newsEvent.Serialize();
+                string newsGroup = LbpSerializer.StringElement("timestamp", newsEntry.Timestamp) + LbpSerializer.StringElement("news_id", newsEntry.NewsId);
+
+                newsGroup += LbpSerializer.StringElement("events", LbpSerializer.TaggedStringElement("event", newsGroup, "type", "news_post"));
+
+                groups += LbpSerializer.TaggedStringElement("group", newsGroup, "type", "news");
             }
         }
         string serialized = LbpSerializer.StringElement

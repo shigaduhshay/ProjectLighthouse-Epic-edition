@@ -6,6 +6,7 @@ using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Activity;
 using LBPUnion.ProjectLighthouse.Types.Categories;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.News;
 using LBPUnion.ProjectLighthouse.Types.Profiles;
 using LBPUnion.ProjectLighthouse.Types.Reviews;
 using LBPUnion.ProjectLighthouse.Types.Settings;
@@ -38,6 +39,7 @@ public class Database : DbContext
     public DbSet<UserApprovedIpAddress> UserApprovedIpAddresses { get; set; }
     public DbSet<DatabaseCategory> CustomCategories { get; set; }
     public DbSet<ActivityEntry> ActivityLog { get; set; }
+    public DbSet<NewsEntry> NewsEntries { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
         => options.UseMySql(ServerSettings.Instance.DbConnectionString, MySqlServerVersion.LatestSupportedServerVersion);
