@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Activity;
+using LBPUnion.ProjectLighthouse.Types.Levels;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBPUnion.ProjectLighthouse.Maintenance.MaintenanceJobs;
@@ -32,9 +33,42 @@ public class PopulateActivityLogMaintenanceJob : IMaintenanceJob
             );
         }
 
+        // Populate with new levels
+        foreach (Slot slot in await this.database.Slots.Include(s => s.Creator).ToListAsync())
+        {
+            this.database.ActivityLog.Add
+            (
+                new ActivityEntry
+                {
+                    User = slot.Creator,
+                    UserId = slot.CreatorId,
+                    RelatedId = slot.SlotId,
+                    Type = EventType.PublishLevel,
+                    Timestamp = slot.FirstUploaded == 0 ? TimestampHelper.TimestampMillis : slot.FirstUploaded,
+                }
+            );
+        }
+
+        // Populate with new photos
+        foreach (Photo photo in await this.database.Photos.Include(p => p.Creator).ToListAsync())
+        {
+            this.database.ActivityLog.Add
+            (
+                new ActivityEntry
+                {
+                    User = photo.Creator,
+                    UserId = photo.CreatorId,
+                    RelatedId = photo.PhotoId,
+                    Type = EventType.UploadPhoto,
+                    Timestamp = photo.Timestamp * 1000,
+                }
+            );
+        }
+
         // Finally, save.
         await this.database.SaveChangesAsync();
     }
     public string Name() => "Populate Activity Log";
-    public string Description() => "Adds entries to the activity log based on events that have happened in the past";
+    public string Description()
+        => "Adds entries to the activity log based on events that have happened in the past. Only do this if you have a completely cleared activity log.";
 }
