@@ -7,6 +7,7 @@ using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Activity;
 using LBPUnion.ProjectLighthouse.Types.Activity.Events;
+using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.News;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,9 +27,14 @@ public class RecentActivityController : ControllerBase
         this.database = database;
     }
 
-    private async Task<List<LevelGroup>> getActivityInvolvingLevels()
+    private async Task<List<LevelGroup>> getActivityInvolvingLevels(long timestamp, long endTimestamp)
     {
-        List<ActivityEntry> activityEntries = await this.database.ActivityLog.Include(e => e.User).OrderByDescending(l => l.Timestamp).Take(20).ToListAsync();
+        List<ActivityEntry> activityEntries = await this.database.ActivityLog.Include
+                (e => e.User)
+            .Where(l => l.Timestamp < timestamp)
+            .Where(l => l.Timestamp >= endTimestamp)
+            .OrderByDescending(l => l.Timestamp)
+            .ToListAsync();
 
         List<LevelGroup> levelGroups = new();
 
@@ -52,6 +58,27 @@ public class RecentActivityController : ControllerBase
             );
         }
 
+        // Levels
+
+        foreach (ActivityEntry entry in activityEntries.Where(entry => entry.Type == EventType.PublishLevel))
+        {
+            Slot? slot = await this.database.Slots.FirstOrDefaultAsync(s => s.SlotId == entry.RelatedId);
+            if (slot == null) continue;
+
+            LevelGroup levelGroup = levelGroups.GetOrCreateLevelGroup(entry.RelatedId);
+            UserGroup userGroup = levelGroup.GetOrCreateUserGroup(entry.User);
+
+            userGroup.Events.Add
+            (
+                new PublishLevelEvent
+                {
+                    Timestamp = entry.Timestamp,
+                    Slot = slot,
+                    User = entry.User,
+                }
+            );
+        }
+
         return levelGroups;
     }
 
@@ -63,8 +90,9 @@ public class RecentActivityController : ControllerBase
 
 //        return this.Ok(IOFile.ReadAllText("/home/jvyden/.config/JetBrains/Rider2021.3/scratches/recent-activity.xml"));
         if (timestamp == 0) timestamp = TimestampHelper.TimestampMillis;
+        long endTimestamp = timestamp - 86400000 * 2; // 2 days
 
-        List<LevelGroup> levelGroups = await this.getActivityInvolvingLevels();
+        List<LevelGroup> levelGroups = await this.getActivityInvolvingLevels(timestamp, endTimestamp);
 
         string groups = levelGroups.Aggregate(string.Empty, (current, levelGroup) => current + levelGroup.Serialize());
 
@@ -86,8 +114,8 @@ public class RecentActivityController : ControllerBase
         string serialized = LbpSerializer.StringElement
         (
             "stream",
-            LbpSerializer.StringElement("start_timestamp", timestamp - 604800000) + // Start timestamp is current timestamp minus 1 week
-            LbpSerializer.StringElement("end_timestamp", timestamp) +
+            LbpSerializer.StringElement("start_timestamp", timestamp) + // Start timestamp is current timestamp minus 1 week
+            LbpSerializer.StringElement("end_timestamp", endTimestamp) +
             LbpSerializer.StringElement("groups", groups) +
             LbpSerializer.StringElement("news", news)
         );
