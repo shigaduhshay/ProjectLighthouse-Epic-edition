@@ -27,15 +27,8 @@ public class RecentActivityController : ControllerBase
         this.database = database;
     }
 
-    private async Task<List<LevelGroup>> getActivityInvolvingLevels(long timestamp, long endTimestamp)
+    private async Task<List<LevelGroup>> getActivityInvolvingLevels(List<ActivityEntry> activityEntries)
     {
-        List<ActivityEntry> activityEntries = await this.database.ActivityLog.Include
-                (e => e.User)
-            .Where(l => l.Timestamp < timestamp)
-            .Where(l => l.Timestamp >= endTimestamp)
-            .OrderByDescending(l => l.Timestamp)
-            .ToListAsync();
-
         List<LevelGroup> levelGroups = new();
 
         // Scores
@@ -58,15 +51,20 @@ public class RecentActivityController : ControllerBase
             );
         }
 
-        // Levels
+        return levelGroups;
+    }
 
+    private async Task<List<UserGroup>> getActivityInvolvingUsers(List<ActivityEntry> activityEntries)
+    {
+        List<UserGroup> userGroups = new();
+
+        // Uploaded levels
         foreach (ActivityEntry entry in activityEntries.Where(entry => entry.Type == EventType.PublishLevel))
         {
             Slot? slot = await this.database.Slots.FirstOrDefaultAsync(s => s.SlotId == entry.RelatedId);
             if (slot == null) continue;
 
-            LevelGroup levelGroup = levelGroups.GetOrCreateLevelGroup(entry.RelatedId);
-            UserGroup userGroup = levelGroup.GetOrCreateUserGroup(entry.User);
+            UserGroup userGroup = userGroups.GetOrCreateUserGroup(entry.User);
 
             userGroup.Events.Add
             (
@@ -79,7 +77,7 @@ public class RecentActivityController : ControllerBase
             );
         }
 
-        return levelGroups;
+        return userGroups;
     }
 
     [HttpGet("stream")]
@@ -88,13 +86,21 @@ public class RecentActivityController : ControllerBase
         User? user = await this.database.UserFromGameRequest(this.Request);
         if (user == null) return this.StatusCode(403, "");
 
-//        return this.Ok(IOFile.ReadAllText("/home/jvyden/.config/JetBrains/Rider2021.3/scratches/recent-activity.xml"));
         if (timestamp == 0) timestamp = TimestampHelper.TimestampMillis;
         long endTimestamp = timestamp - 86400000 * 2; // 2 days
 
-        List<LevelGroup> levelGroups = await this.getActivityInvolvingLevels(timestamp, endTimestamp);
+        List<ActivityEntry> activityEntries = await this.database.ActivityLog.Include
+                (e => e.User)
+            .Where(l => l.Timestamp < timestamp)
+            .Where(l => l.Timestamp >= endTimestamp)
+            .OrderByDescending(l => l.Timestamp)
+            .ToListAsync();
+
+        List<LevelGroup> levelGroups = await this.getActivityInvolvingLevels(activityEntries);
+        List<UserGroup> userGroups = await this.getActivityInvolvingUsers(activityEntries);
 
         string groups = levelGroups.Aggregate(string.Empty, (current, levelGroup) => current + levelGroup.Serialize());
+        groups += userGroups.Aggregate(string.Empty, (current, userGroup) => current + userGroup.Serialize());
 
         string news = string.Empty;
         if (!excludeNews)

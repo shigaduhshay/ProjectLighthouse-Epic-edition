@@ -23,6 +23,23 @@ public static class GroupListExtensions
         return levelGroup;
     }
 
+    public static UserGroup GetOrCreateUserGroup(this List<UserGroup> userGroups, User user)
+    {
+        UserGroup? userGroup = userGroups.FirstOrDefault(u => u.User.UserId == user.UserId);
+        if (userGroup == null)
+        {
+            userGroup = new UserGroup
+            {
+                User = user,
+                Events = new List<IEvent>(),
+            };
+
+            userGroups.Add(userGroup);
+        }
+
+        return userGroup;
+    }
+
     public static UserGroup GetOrCreateUserGroup(this LevelGroup levelGroup, User user)
     {
         UserGroup? userGroup = levelGroup.UserGroups.FirstOrDefault(u => u.User == user);

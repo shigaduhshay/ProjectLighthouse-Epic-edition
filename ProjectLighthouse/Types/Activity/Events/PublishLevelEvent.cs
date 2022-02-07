@@ -10,6 +10,10 @@ public class PublishLevelEvent : IEvent
     public Slot Slot { get; init; }
     public string Serialize()
     {
-        return LbpSerializer.TaggedStringElement("event", "", "type", "publish_level");
+        string @event = LbpSerializer.StringElement("timestamp", this.Timestamp) +
+                        LbpSerializer.StringElement("actor", this.User.Username) +
+                        LbpSerializer.TaggedStringElement("object_slot_id", this.Slot.SlotId, "type", "user");
+
+        return LbpSerializer.TaggedStringElement("event", @event, "type", "publish_level");
     }
 }
