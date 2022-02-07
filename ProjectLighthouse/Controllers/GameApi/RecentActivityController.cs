@@ -51,20 +51,14 @@ public class RecentActivityController : ControllerBase
             );
         }
 
-        return levelGroups;
-    }
-
-    private async Task<List<UserGroup>> getActivityInvolvingUsers(List<ActivityEntry> activityEntries)
-    {
-        List<UserGroup> userGroups = new();
-
         // Uploaded levels
         foreach (ActivityEntry entry in activityEntries.Where(entry => entry.Type == EventType.PublishLevel))
         {
             Slot? slot = await this.database.Slots.FirstOrDefaultAsync(s => s.SlotId == entry.RelatedId);
             if (slot == null) continue;
 
-            UserGroup userGroup = userGroups.GetOrCreateUserGroup(entry.User);
+            LevelGroup levelGroup = levelGroups.GetOrCreateLevelGroup(slot.SlotId);
+            UserGroup userGroup = levelGroup.GetOrCreateUserGroup(entry.User);
 
             userGroup.Events.Add
             (
@@ -76,6 +70,13 @@ public class RecentActivityController : ControllerBase
                 }
             );
         }
+
+        return levelGroups;
+    }
+
+    private async Task<List<UserGroup>> getActivityInvolvingUsers(List<ActivityEntry> activityEntries)
+    {
+        List<UserGroup> userGroups = new();
 
         return userGroups;
     }

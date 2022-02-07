@@ -12,6 +12,8 @@ public class PublishLevelEvent : IEvent
     {
         string @event = LbpSerializer.StringElement("timestamp", this.Timestamp) +
                         LbpSerializer.StringElement("actor", this.User.Username) +
+                        LbpSerializer.StringElement("republish", 0) +
+                        LbpSerializer.StringElement("count", 1) +
                         LbpSerializer.TaggedStringElement("object_slot_id", this.Slot.SlotId, "type", "user");
 
         return LbpSerializer.TaggedStringElement("event", @event, "type", "publish_level");
