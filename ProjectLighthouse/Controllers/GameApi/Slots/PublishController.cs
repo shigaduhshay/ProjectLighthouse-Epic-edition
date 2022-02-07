@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
+using LBPUnion.ProjectLighthouse.Types.Activity;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Profiles;
 using LBPUnion.ProjectLighthouse.Types.Settings;
@@ -161,6 +162,19 @@ public class PublishController : ControllerBase
             "New level published!",
             $"**{user.Username}** just published a new level: [**{slot.Name}**]({ServerSettings.Instance.ExternalUrl}/slot/{slot.SlotId})\n{slot.Description}"
         );
+        this.database.ActivityLog.Add
+        (
+            new ActivityEntry
+            {
+                User = user,
+                UserId = user.UserId,
+                Timestamp = slot.FirstUploaded,
+                Type = EventType.PublishLevel,
+                RelatedId = slot.SlotId,
+            }
+        );
+
+        await this.database.SaveChangesAsync();
 
         return this.Ok(slot.Serialize());
     }
