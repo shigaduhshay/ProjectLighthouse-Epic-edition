@@ -71,6 +71,26 @@ public class RecentActivityController : ControllerBase
             );
         }
 
+        // Uploaded photos
+        foreach (ActivityEntry entry in activityEntries.Where(entry => entry.Type == EventType.UploadPhoto))
+        {
+            Photo? photo = await this.database.Photos.FirstOrDefaultAsync(s => s.PhotoId == entry.RelatedId);
+            if (photo == null) continue;
+
+            LevelGroup levelGroup = levelGroups.GetOrCreateLevelGroup(1);
+            UserGroup userGroup = levelGroup.GetOrCreateUserGroup(entry.User);
+
+            userGroup.Events.Add
+            (
+                new UploadPhotoEvent
+                {
+                    Timestamp = entry.Timestamp,
+                    Photo = photo,
+                    User = entry.User,
+                }
+            );
+        }
+
         return levelGroups;
     }
 
