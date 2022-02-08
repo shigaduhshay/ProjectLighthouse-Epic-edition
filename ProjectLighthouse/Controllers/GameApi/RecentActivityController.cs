@@ -9,6 +9,7 @@ using LBPUnion.ProjectLighthouse.Types.Activity;
 using LBPUnion.ProjectLighthouse.Types.Activity.Events;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.News;
+using LBPUnion.ProjectLighthouse.Types.Reviews;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using IOFile = System.IO.File;
@@ -86,6 +87,27 @@ public class RecentActivityController : ControllerBase
                 {
                     Timestamp = entry.Timestamp,
                     Photo = photo,
+                    User = entry.User,
+                }
+            );
+        }
+
+        // Reviewed levels
+        foreach (ActivityEntry entry in activityEntries.Where(entry => entry.Type == EventType.ReviewLevel))
+        {
+            Review? review = await this.database.Reviews.Include(r => r.Slot).FirstOrDefaultAsync(s => s.ReviewId == entry.RelatedId);
+            if (review == null) continue;
+
+            LevelGroup levelGroup = levelGroups.GetOrCreateLevelGroup(review.SlotId);
+            UserGroup userGroup = levelGroup.GetOrCreateUserGroup(entry.User);
+
+            userGroup.Events.Add
+            (
+                new ReviewLevelEvent
+                {
+                    Timestamp = entry.Timestamp,
+                    Review = review,
+                    Slot = review.Slot,
                     User = entry.User,
                 }
             );

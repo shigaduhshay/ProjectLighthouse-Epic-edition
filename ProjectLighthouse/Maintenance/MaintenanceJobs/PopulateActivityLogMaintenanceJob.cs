@@ -4,6 +4,7 @@ using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Activity;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Reviews;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBPUnion.ProjectLighthouse.Maintenance.MaintenanceJobs;
@@ -61,6 +62,22 @@ public class PopulateActivityLogMaintenanceJob : IMaintenanceJob
                     RelatedId = photo.PhotoId,
                     Type = EventType.UploadPhoto,
                     Timestamp = photo.Timestamp * 1000,
+                }
+            );
+        }
+
+        // Populate with reviews
+        foreach (Review review in await this.database.Reviews.Include(r => r.Reviewer).ToListAsync())
+        {
+            this.database.ActivityLog.Add
+            (
+                new ActivityEntry
+                {
+                    User = review.Reviewer,
+                    UserId = review.ReviewerId,
+                    RelatedId = review.ReviewId,
+                    Type = EventType.ReviewLevel,
+                    Timestamp = review.Timestamp,
                 }
             );
         }
