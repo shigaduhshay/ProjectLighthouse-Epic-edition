@@ -82,6 +82,22 @@ public class PopulateActivityLogMaintenanceJob : IMaintenanceJob
             );
         }
 
+        // Populate with dpad ratings
+        foreach (RatedLevel ratedLevel in await this.database.RatedLevels.Include(r => r.User).ToListAsync())
+        {
+            this.database.ActivityLog.Add
+            (
+                new ActivityEntry
+                {
+                    User = ratedLevel.User,
+                    UserId = ratedLevel.UserId,
+                    RelatedId = ratedLevel.RatedLevelId,
+                    Type = EventType.DpadRateLevel,
+                    Timestamp = TimestampHelper.TimestampMillis,
+                }
+            );
+        }
+
         // Finally, save.
         await this.database.SaveChangesAsync();
     }

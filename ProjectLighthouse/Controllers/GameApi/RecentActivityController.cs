@@ -113,6 +113,27 @@ public class RecentActivityController : ControllerBase
             );
         }
 
+        // Dpad rated levels
+        foreach (ActivityEntry entry in activityEntries.Where(entry => entry.Type == EventType.DpadRateLevel))
+        {
+            RatedLevel? ratedLevel = await this.database.RatedLevels.Include(r => r.Slot).FirstOrDefaultAsync(r => r.RatedLevelId == entry.RelatedId);
+            if (ratedLevel == null) continue;
+
+            LevelGroup levelGroup = levelGroups.GetOrCreateLevelGroup(ratedLevel.SlotId);
+            UserGroup userGroup = levelGroup.GetOrCreateUserGroup(entry.User);
+
+            userGroup.Events.Add
+            (
+                new DpadRateLevelEvent
+                {
+                    Timestamp = entry.Timestamp,
+                    RatedLevel = ratedLevel,
+                    Slot = ratedLevel.Slot,
+                    User = entry.User,
+                }
+            );
+        }
+
         return levelGroups;
     }
 

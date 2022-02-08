@@ -97,6 +97,20 @@ public class ReviewController : ControllerBase
 
         await this.database.SaveChangesAsync();
 
+        this.database.ActivityLog.Add
+        (
+            new ActivityEntry
+            {
+                User = user,
+                UserId = user.UserId,
+                RelatedId = ratedLevel.RatedLevelId,
+                Timestamp = TimestampHelper.TimestampMillis,
+                Type = EventType.DpadRateLevel,
+            }
+        );
+
+        await this.database.SaveChangesAsync();
+
         return this.Ok();
     }
 
