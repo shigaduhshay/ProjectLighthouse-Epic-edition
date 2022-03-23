@@ -1,5 +1,7 @@
 # Project Lighthouse
 
+why did i fork this
+
 Project Lighthouse is a clean-room, open-source custom server for LittleBigPlanet. This is a project conducted by
 the [LBP Union Ministry of Technology Research and Development team](https://www.lbpunion.com/technology).
 
